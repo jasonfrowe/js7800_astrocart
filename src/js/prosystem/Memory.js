@@ -25,6 +25,7 @@
 
 import * as Xm from "./Xm.js"
 import * as Pokey from "./Pokey.js"
+import * as AstroMath from "./AstroMath.js"
 import * as Cartridge from "./Cartridge.js"
 import * as Riot from "./Riot.js"
 import * as Tia from "./Tia.js"
@@ -95,6 +96,9 @@ var memory_souper_ram = new Array(MEMORY_SOUPER_EXRAM_SIZE);
 /** Shadow of Cartridge */
 var cartridge_pokey = false;
 var cartridge_pokey450 = false;
+var cartridge_pokey440 = false;   // AstroCart second POKEY ($0440-$044F)
+var cartridge_mathunit = false;   // AstroCart math unit ($0420-$043F)
+var pokey1 = Pokey.pokey1;
 
 // banksets changes
 var cartridge_pokey800 = false;
@@ -220,6 +224,14 @@ function _memory_Read(address) {
         (xm_IsMemEnabled() && (address >= 0x4000 && address < 0x8000)) ||
         (xm_IsYmEnabled() && (address >= 0x0460 && address <= 0x0461)))) {
     return xm_Read(address);
+  }
+
+  // AstroCart
+  if (cartridge_mathunit && address >= 0x0420 && address < 0x0440) {
+    return AstroMath.Read(address - 0x0420);
+  }
+  if (cartridge_pokey440 && address >= 0x0440 && address < 0x0450) {
+    return pokey1.GetRegister(0x4000 + (address - 0x0440));
   }
 
   // banksets changes (pokey@800)
@@ -358,6 +370,16 @@ function memory_Write(address, data) {
         (xm_IsMemEnabled() && (address >= 0x4000 && address < 0x8000)) ||
         (xm_IsYmEnabled() && (address >= 0x0460 && address <= 0x0461)))) {
     xm_Write(address, data);
+    return;
+  }
+
+  // AstroCart
+  if (cartridge_mathunit && address >= 0x0420 && address < 0x0440) {
+    AstroMath.Write(address - 0x0420, data);
+    return;
+  }
+  if (cartridge_pokey440 && address >= 0x0440 && address < 0x0450) {
+    pokey1.SetRegister(0x4000 + (address - 0x0440), data);
     return;
   }
 
@@ -590,6 +612,8 @@ function memory_souper_GetRamAddress(address)
 function OnCartridgeLoaded() {
   cartridge_pokey = Cartridge.IsPokeyEnabled();
   cartridge_pokey450 = Cartridge.IsPokey450Enabled();
+  cartridge_pokey440 = Cartridge.IsPokey440Enabled();
+  cartridge_mathunit = Cartridge.IsMathUnit();
   cartridge_pokey800 = Cartridge.IsPokey800Enabled();
   cartridge_xm = Cartridge.IsXmEnabled();
   cartridge_flags = Cartridge.GetFlags();

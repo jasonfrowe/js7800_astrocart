@@ -41,6 +41,11 @@
 
 import * as ProSystem from "./ProSystem.js"
 
+// Each POKEY is an instance: createPokey() makes one with its own state. The
+// module's own exports are the first instance (the cartridge's POKEY at $4000,
+// $0450 or $0800, or the XM's); the AstroCart's second POKEY at $0440 is
+// another (see Memory.js).
+function createPokey() {
 var POKEY_BUFFER_SIZE = 2048; // WII
 
 var POKEY_AUDF1 = 0x4000;
@@ -593,16 +598,49 @@ function SetCyclesPerScanline(cycles) {
   CYCLES_PER_SCANLINE = cycles;
 }
 
-export {
-  pokey_Clear as Clear,
-  pokey_Process as Process,
-  pokey_SetRegister as SetRegister,
-  pokey_Reset as Reset,
-  pokey_GetRegister as GetRegister,
-  pokey_setSampleRate as SetSampleRate,
-  pokey_Frame as Frame,
-  pokey_Scanline as Scanline,
-  pokey_buffer as buffer,
+return {
+  Clear: pokey_Clear,
+  Process: pokey_Process,
+  SetRegister: pokey_SetRegister,
+  Reset: pokey_Reset,
+  GetRegister: pokey_GetRegister,
+  SetSampleRate: pokey_setSampleRate,
+  Frame: pokey_Frame,
+  Scanline: pokey_Scanline,
+  buffer: pokey_buffer,
   SetCyclesPerScanline,
   registers
+};
+}
+
+var pokey0 = createPokey();
+var Clear = pokey0.Clear;
+var Process = pokey0.Process;
+var SetRegister = pokey0.SetRegister;
+var Reset = pokey0.Reset;
+var GetRegister = pokey0.GetRegister;
+var SetSampleRate = pokey0.SetSampleRate;
+var Frame = pokey0.Frame;
+var Scanline = pokey0.Scanline;
+var buffer = pokey0.buffer;
+var SetCyclesPerScanline = pokey0.SetCyclesPerScanline;
+var registers = pokey0.registers;
+
+// The second POKEY (AstroCart, $0440)
+var pokey1 = createPokey();
+
+export {
+  Clear,
+  Process,
+  SetRegister,
+  Reset,
+  GetRegister,
+  SetSampleRate,
+  Frame,
+  Scanline,
+  buffer,
+  SetCyclesPerScanline,
+  registers,
+  createPokey,
+  pokey1
 }

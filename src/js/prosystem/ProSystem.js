@@ -27,6 +27,7 @@ import * as WebMouse from "../web/mouse.js"
 import * as Region from "./Region.js"
 import * as Sound from "./Sound.js"
 import * as Pokey from "./Pokey.js"
+import * as AstroMath from "./AstroMath.js"
 import * as Xm from "./Xm.js"
 import * as Memory from "./Memory.js"
 import * as Cartridge from "./Cartridge.js"
@@ -87,12 +88,16 @@ var maria_scanline = 1;
 
 /** Shadow of Cartridge */
 var cartridge_pokey = false;
+var cartridge_pokey440 = false;   // AstroCart second POKEY
+var cartridge_mathunit = false;   // AstroCart math unit
+var pokey1 = Pokey.pokey1;
 var cartridge_flags = 0;
 var cartridge_xm = false;
 var cartridge_hblank = 28;
 
 // Set the scanlines for Pokey
 Pokey.SetCyclesPerScanline(CYCLES_PER_SCANLINE);
+Pokey.pokey1.SetCyclesPerScanline(CYCLES_PER_SCANLINE);
 
 //#ifdef LOWTRACE
 //static char msg[512];
@@ -115,6 +120,8 @@ function prosystem_Reset(postResetCallback) {
     Region.Reset();
     Tia.Clear();
     Pokey.Reset();
+    pokey1.Reset();
+    AstroMath.Reset();
     Xm.Reset();
 
     Memory.Reset();
@@ -405,6 +412,7 @@ function prosystem_ExecuteFrame(input) // TODO: input is array
     if (cartridge_pokey || cartridge_xm) {
       pokey_Process(2);
     }
+    if (cartridge_pokey440) pokey1.Process(2);
 
     if (Cartridge.IsBupChip())
     {
@@ -418,6 +426,7 @@ function prosystem_ExecuteFrame(input) // TODO: input is array
     }
 
     if (cartridge_pokey || cartridge_xm) pokey_Scanline();
+    if (cartridge_pokey440) pokey1.Scanline();
   }
 
   prosystem_frame++;
@@ -451,6 +460,9 @@ function prosystem_Close() {
   Tia.Clear(true);
   Pokey.Reset();
   Pokey.Clear(true);
+  pokey1.Reset();
+  pokey1.Clear(true);
+  AstroMath.Reset();
 }
 
 function IsActive() {
@@ -525,6 +537,8 @@ function SetMstatAdjust(adjust) {
 
 function OnCartridgeLoaded() {
   cartridge_pokey = Cartridge.IsPokeyEnabled();
+  cartridge_pokey440 = Cartridge.IsPokey440Enabled();
+  cartridge_mathunit = Cartridge.IsMathUnit();
   cartridge_xm = Cartridge.IsXmEnabled();
   // cartridge_flags = Cartridge.GetFlags();
   // cartridge_hblank = Cartridge.GetHblank();
@@ -678,6 +692,19 @@ function ProSystemSave()
     loc_buffer[size++] = window.Module._bupchip_GetCurrentSong();
   }
 
+  // AstroCart (at the end, so other saves keep their sizes)
+  if (cartridge_pokey440) {
+    for (let i = 0; i < 32; i++) {
+      loc_buffer[size++] = pokey1.registers[i] || 0;
+    }
+  }
+  if (cartridge_mathunit) {
+    const m = AstroMath.Save();
+    for (let i = 0; i < m.length; i++) {
+      loc_buffer[size++] = m[i];
+    }
+  }
+
   loc_buffer.length = size;
   return loc_buffer;
 }
@@ -686,7 +713,10 @@ function ProSystemSave()
 // Load
 // ----------------------------------------------------------------------------
 function ProSystemLoad(loc_buffer) {
-  const size = loc_buffer.length;
+  // the AstroCart state is at the end
+  const astroSize = (cartridge_pokey440 ? 32 : 0) +
+    (cartridge_mathunit ? AstroMath.SAVE_SIZE : 0);
+  const size = loc_buffer.length - astroSize;
 
   console.log("Loading game state.");
 
@@ -827,6 +857,15 @@ function ProSystemLoad(loc_buffer) {
     window.Module._bupchip_SetVolumeValue(loc_buffer[offset++]);
     window.Module._bupchip_SetCurrentSong(loc_buffer[offset++]);
     window.Module._bupchip_StateLoaded();
+  }
+
+  if (cartridge_pokey440) {
+    for (let i = 0; i < 32; i++) {
+      pokey1.SetRegister(0x4000 + i, loc_buffer[offset++]);
+    }
+  }
+  if (cartridge_mathunit) {
+    offset = AstroMath.Load(loc_buffer, offset);
   }
 
   console.log(loc_buffer.length + ", " + offset);

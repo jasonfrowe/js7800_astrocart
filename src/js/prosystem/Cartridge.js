@@ -85,6 +85,10 @@ var cartridge_region = 0;
 var cartridge_pokey = false;
 //bool cartridge_pokey450;
 var cartridge_pokey450 = false;
+// AstroCart: a second POKEY at $0440 (header bit 10) and the math unit at
+// $0420-$043F (header bytes 59-61 = "ACM")
+var cartridge_pokey440 = false;
+var cartridge_mathunit = false;
 //byte cartridge_controller[2] = {1, 1};
 var cartridge_controller = [1, 1];
 //byte cartridge_bank;
@@ -320,6 +324,11 @@ function cartridge_ReadHeader(header) {
   cartridge_pokey450 = (header[54] & 0x40) ? true : false;
   // banksets changes
   cartridge_pokey800 = (header[53] & 0x80) ? true : false;
+  cartridge_pokey440 = (header[53] & 0x04) ? true : false;
+  cartridge_mathunit = header[59] == 0x41 && header[60] == 0x43 && header[61] == 0x4D;
+  if (cartridge_mathunit) {
+    console.log("  AstroCart math unit at $0420-$043F");
+  }
   if (cartridge_pokey450 || cartridge_pokey800) {
     cartridge_pokey = true;
   }
@@ -894,6 +903,8 @@ function cartridge_Release() {
     cartridge_pokey450 = 0;
       // banksets changes
     cartridge_pokey800 = 0;
+    cartridge_pokey440 = false;
+    cartridge_mathunit = false;
     cartridge_xm = false;
     // Default to joysticks
     //memset(cartridge_controller, 1, sizeof(cartridge_controller));
@@ -1001,6 +1012,14 @@ function IsPokeyEnabled() {
 
 function IsPokey450Enabled() {
   return cartridge_pokey450;
+}
+
+function IsPokey440Enabled() {
+  return cartridge_pokey440;
+}
+
+function IsMathUnit() {
+  return cartridge_mathunit;
 }
 
 function IsPokey800Enabled() {
@@ -1236,6 +1255,8 @@ export {
   IsPokeyEnabled,
   IsPokey450Enabled,
   IsPokey800Enabled,
+  IsPokey440Enabled,
+  IsMathUnit,
   IsPokeyWriteOnly,
   IsXmEnabled,
   IsSwapButtons,

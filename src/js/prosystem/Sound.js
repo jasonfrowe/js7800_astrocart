@@ -33,6 +33,10 @@ import * as YM from "../3rdparty/ym2151.js"
 
 var pokey_buffer = Pokey.buffer;
 var pokey_Clear = Pokey.Clear;
+var pokey1 = Pokey.pokey1;          // AstroCart second POKEY
+var pokey1_buffer = pokey1.buffer;
+var cartridge_pokey440 = false;
+var pokeyMix = new Array(2048);
 var tia_buffer = Tia.buffer;
 var tia_Clear = Tia.Clear;
 var xm_IsPokeyEnabled = Xm.IsPokeyEnabled;
@@ -157,7 +161,16 @@ function sound_Store() {
   var length = sound_GetSampleLength(
     prosystem_sampleRate, prosystem_frame, prosystem_frequency);   
     
-  sound_Resample(tia_buffer, (pokey ? pokey_buffer : null), sample, length);
+  var pokeyOut = pokey ? pokey_buffer : null;
+  if (cartridge_pokey440) {
+    // two POKEYs: their average, so together they peak where one does
+    var a = pokey ? pokey_buffer : null;
+    for (var i = 0; i < pokeyMix.length; i++) {
+      pokeyMix[i] = ((a ? (a[i] || 0) : 0) + (pokey1_buffer[i] || 0)) / 2;
+    }
+    pokeyOut = pokeyMix;
+  }
+  sound_Resample(tia_buffer, pokeyOut, sample, length);
 
   if (cartridge_bupchip) {
     let bupBuffer = new Int16Array(Module.HEAP16.buffer, window.Module._bupchip_GetBupChipBuffer(), length << 1);
@@ -176,6 +189,7 @@ function sound_Store() {
 
    tia_Clear();
    pokey_Clear();
+   if (cartridge_pokey440) pokey1.Clear();
 
   if (ym) {
     YM.mixStereo(ymBuffer, length, 0);
@@ -274,6 +288,7 @@ function SetSampleRate(rate) {
   }
   console.log("Set sample rate: %d", rate);
   Pokey.SetSampleRate(rate);
+  pokey1.SetSampleRate(rate);
   YM.setSampleRate(rate);
   prosystem_sampleRate = rate; 
 }
@@ -284,6 +299,7 @@ function SetStoreSoundCallback(callback) {
 
 function OnCartridgeLoaded() {
   cartridge_pokey = Cartridge.IsPokeyEnabled();
+  cartridge_pokey440 = Cartridge.IsPokey440Enabled();
   cartridge_bupchip = Cartridge.IsBupChip();
 }
 
