@@ -940,8 +940,9 @@ function cartridge_LoadHighScoreCart(callback) {
     return;
   }
 
-  // Load high score cartridge
-  var high_score_buffer = highScoreCallback.getRom();
+  // Load high score cartridge (no callback set: the page has no high score
+  // cartridge, as with js7800's default callback)
+  var high_score_buffer = highScoreCallback ? highScoreCallback.getRom() : null;
   if (high_score_buffer == null) {
     console.log("Unable to locate high score cartridge.");
     callback(false);

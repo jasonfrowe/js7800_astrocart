@@ -23,6 +23,9 @@
     show(String(error), true);
   });
   main.init("js7800__target", { debug: false });
+  // No High Score Cartridge: js7800's default callback. Without one, carts
+  // whose header asks for the HSC stopped at the static screen.
+  if (main.HighScoreCallback) main.setHighScoreCallback(new main.HighScoreCallback());
 
   fetch(rom)
     .then(function (response) {
