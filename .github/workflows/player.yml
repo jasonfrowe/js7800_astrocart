@@ -1,0 +1,109 @@
+# Publishes an Atari 7800 game's web player to its repository's GitHub Pages
+# site: builds the game (web/game.json's "build"), builds this emulator, makes
+# the page with player/make_site.py and deploys it. A game repository calls it
+# with:
+#
+#   jobs:
+#     web:
+#       uses: jasonfrowe/js7800_astrocart/.github/workflows/player.yml@astrocart
+#       permissions:
+#         contents: read
+#         pages: write
+#         id-token: write
+#
+# and sets Pages to "GitHub Actions" in its settings. player/README.md
+# describes web/game.json.
+
+name: Web player
+
+on:
+  workflow_call:
+    inputs:
+      emulator:
+        description: js7800_astrocart branch, tag or commit
+        type: string
+        default: astrocart
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      tip: ${{ steps.tip.outputs.tip }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/checkout@v7
+        with:
+          repository: jasonfrowe/js7800_astrocart
+          ref: ${{ inputs.emulator || 'astrocart' }}
+          path: .js7800
+
+      - uses: bytecodealliance/actions/wasmtime/setup@v1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Python packages
+        run: |
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Build the game
+        run: |
+          set -euo pipefail
+          build=$(python3 -c 'import json; print(json.load(open("web/game.json")).get("build", ""))')
+          if [ -n "$build" ]; then sh -c "$build"; fi
+
+      - name: Build the emulator
+        run: .js7800/player/bundle.sh
+
+      - name: Make the page
+        run: >-
+          python3 .js7800/player/make_site.py . "$RUNNER_TEMP/site"
+          --bundle .js7800/dist/js7800.min.js
+          --version "$(git rev-parse --short HEAD)-$(git -C .js7800 rev-parse --short HEAD)"
+
+      # Runs for separate commits overlap, so a run deploys only while the
+      # branch is still at its commit, and an older run never replaces a
+      # newer site.
+      - name: Check that the branch is still at this commit
+        id: tip
+        run: |
+          set -euo pipefail
+          tip=$(git ls-remote origin "$GITHUB_REF" | cut -f1)
+          if [ "$tip" = "$GITHUB_SHA" ]; then
+            echo "tip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "tip=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Not deployed: $GITHUB_REF moved past $GITHUB_SHA during the run"
+          fi
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: ${{ runner.temp }}/site
+
+  deploy:
+    needs: build
+    if: needs.build.outputs.tip == 'true'
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v5

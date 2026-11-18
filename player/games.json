@@ -1,0 +1,30 @@
+[
+  {
+    "slug": "pinball",
+    "title": "Super Mega Pinball 7800",
+    "blurb": "A pinball table with real flipper physics, a wire ramp, drop targets and three-ball multiball, with music on two POKEY chips.",
+    "repo": "https://github.com/jasonfrowe/Super_Mega_Pinball_7800",
+    "image": "screen.png"
+  },
+  {
+    "slug": "gammaforce",
+    "title": "Atari Gamma Force",
+    "blurb": "A vertical shooter in nine stages, with the Vulcan, the Radiant Sword that absorbs pink bullets, and bosses taken apart piece by piece.",
+    "repo": "https://github.com/jasonfrowe/AtariGammaForce",
+    "image": "screen.png"
+  },
+  {
+    "slug": "astrowing",
+    "title": "Astro Wing: Starfighter",
+    "blurb": "A multi-directional space shooter with Newtonian physics: six sectors, drifting asteroids, ship upgrades and a flagship at the end.",
+    "repo": "https://github.com/jasonfrowe/Astrowing",
+    "image": "screen.png"
+  },
+  {
+    "slug": "spacewar",
+    "title": "Spacewar 7800",
+    "blurb": "Bill Seiler's 1985 Spacewar for the 7800: a duel around a sun with real gravity, against the computer or a friend.",
+    "repo": "https://github.com/jasonfrowe/Spacewar_7800",
+    "image": "screen.gif"
+  }
+]

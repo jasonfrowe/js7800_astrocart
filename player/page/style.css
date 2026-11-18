@@ -1,0 +1,175 @@
+:root {
+  --bg: #0b0716;
+  --panel: #160e2b;
+  --line: #3a2766;
+  --text: #e6e0f5;
+  --dim: #a99cc8;
+  --accent: #ff4fd8;
+  --accent2: #59d7ff;
+  --gold: #ffd257;
+}
+
+/* only on this page's own boxes: js7800's player is laid out content-box */
+.top, main, section, footer, table { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+a { color: var(--accent2); }
+a:hover { color: var(--gold); }
+
+.top {
+  text-align: center;
+  padding: 24px 16px 8px;
+}
+
+.top h1 {
+  margin: 0;
+  font-size: clamp(1.6rem, 5vw, 2.6rem);
+  letter-spacing: 0.04em;
+  color: var(--gold);
+  text-shadow: 0 0 18px rgba(255, 79, 216, 0.45);
+}
+
+.top h1 span { color: var(--accent); }
+
+.tag {
+  margin: 4px 0 0;
+  color: var(--dim);
+}
+
+main {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 8px 16px 24px;
+}
+
+#player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 8px 0 24px;
+}
+
+#js7800__target {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.status {
+  margin: 10px 0 0;
+  color: var(--dim);
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.status--error { color: #ff7a7a; }
+
+section {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 0 0 16px;
+}
+
+section h2 {
+  margin: 0 0 10px;
+  font-size: 1.15rem;
+  color: var(--accent);
+}
+
+section p { margin: 8px 0 0; }
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th, td {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+th {
+  width: 38%;
+  font-weight: 600;
+  color: var(--text);
+}
+
+td { color: var(--dim); }
+
+kbd {
+  display: inline-block;
+  min-width: 1.6em;
+  padding: 0 6px;
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: #22173f;
+  color: var(--text);
+  font: 0.9em/1.6 ui-monospace, Menlo, Consolas, monospace;
+  text-align: center;
+}
+
+footer {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 16px 32px;
+  color: var(--dim);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+@media (min-width: 900px) {
+  main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 16px;
+  }
+  #player { grid-column: 1 / -1; }
+}
+
+.note {
+  color: var(--dim);
+  font-size: 0.9rem;
+}
+
+/* the Atari 7800 landing page */
+.games {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+
+.card img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 6px;
+  background: #000;
+  image-rendering: pixelated;
+}
+
+.card h2 { margin: 12px 0 4px; }
+.card h2 a { color: var(--gold); text-decoration: none; }
+.card h2 a:hover { color: var(--accent); }
+.card p { color: var(--dim); flex: 1; }
+.card .links { flex: 0; color: var(--text); }
+
+@media (min-width: 900px) {
+  main.landing { display: block; }
+}
